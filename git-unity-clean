@@ -66,12 +66,14 @@ get_path_from_status_line()
     fi
 
     if [[ ${__status_line: -1} == / ]]; then
-        __status_line=${__status_line:0:-1}
+        __status_line=${__status_line%?}
     fi
 
     echo $__status_line
 }
 
+cd "$(git rev-parse --show-toplevel)"
+source "$(git --exec-path)/git-sh-setup"
 
 # This is needed to split `git status -s` output into lines correctly
 IFS=$'\n'
