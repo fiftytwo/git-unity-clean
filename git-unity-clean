@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if ! git --version > /dev/null 2>&1 ;then
+if ! git --version > /dev/null 2>&1 ; then
     echo "Error: git is not found"
     exit 1
 fi
@@ -38,7 +38,7 @@ restore_directory_for_meta_if_needed()
 {
     local __meta="$1"
     if [[ "$__meta" == *.meta && -f "$__meta" ]]; then
-        __asset=${__meta%.*}
+        local __asset=${__meta%.*}
         [[ -f "$__asset" || -d "$__asset" ]] && return
         echo "Restore directory for existing meta '$__asset'"
         is_dry && return;
