@@ -1,0 +1,127 @@
+#!/bin/bash
+
+if ! git --version > /dev/null 2>&1 ;then
+    echo "Error: git is not found"
+fi
+
+# Define dry_run variable
+[[ "$1" == --dry-run || "$1" == -n ]] && dry_run=true || dry_run=false
+
+is_dry()
+{
+    [[ $dry_run == true ]] && return 0 || return 1
+}
+
+remove_file()
+{
+    echo "Remove file '$1'"
+    is_dry && return;
+    rm -f "$1"
+}
+
+remove_directory()
+{
+    echo "Remove directory '$1'"
+    is_dry && return;
+    rm -rf "$1"
+}
+
+discard_file()
+{
+    echo "Discard file $1 '$2'"
+    is_dry && return;
+    git checkout -- "$2"
+}
+
+restore_directory_for_meta_if_needed()
+{
+    local __meta="$1"
+    if [[ "$__meta" == *.meta && -f "$__meta" ]]; then
+        __asset=${__meta%.*}
+        [[ -f "$__asset" || -d "$__asset" ]] && return
+        echo "Restore directory for existing meta '$__asset'"
+        is_dry && return;
+        mkdir "$__asset"
+    fi
+}
+
+get_x_status_from_status_line()
+{
+    echo ${1:0:1} | awk '{print toupper($0)}'
+}
+
+get_y_status_from_status_line()
+{
+    echo ${1:1:1} | awk '{print toupper($0)}'
+}
+
+get_path_from_status_line()
+{
+    local __status_line=$1
+
+    if [[ ${__status_line:3:1} == \" ]]; then
+        __status_line=${__status_line:4:-1}
+    else
+        __status_line=${__status_line:3}
+    fi
+
+    if [[ ${__status_line: -1} == / ]]; then
+        __status_line=${__status_line:0:-1}
+    fi
+
+    echo $__status_line
+}
+
+
+# This is needed to split `git status -s` output into lines correctly
+IFS=$'\n'
+
+# Remove untracked files and directories
+for line in `git status -s`
+do
+    x_status=`get_x_status_from_status_line "$line"`
+    [[ x_status == [A-Z] ]] && continue;
+    y_status=`get_y_status_from_status_line "$line"`
+    path=`get_path_from_status_line "$line"`
+
+    if [[ $y_status == \? ]]; then
+        if [[ -f "$path" ]]; then
+            remove_file "$path"
+        elif [[ -d "$path" ]]; then
+            remove_directory "$path"
+            restore_directory_for_meta_if_needed "${path}.meta"
+        fi
+    fi
+done
+
+# Discard deleted files
+for line in `git status -s`
+do
+    x_status=`get_x_status_from_status_line "$line"`
+    [[ x_status == [A-Z] ]] && continue;
+    y_status=`get_y_status_from_status_line "$line"`
+    path=`get_path_from_status_line "$line"`
+
+    if [[ $y_status == D ]]; then
+        discard_file $y_status "$path"
+        restore_directory_for_meta_if_needed "$path"
+    fi
+done
+
+# Discard modified files
+for line in `git status -s`
+do
+    x_status=`get_x_status_from_status_line "$line"`
+    [[ x_status == [A-Z] ]] && continue;
+    y_status=`get_y_status_from_status_line "$line"`
+    path=`get_path_from_status_line "$line"`
+
+    if [[ $y_status == M ]]; then
+        discard_file $y_status "$path"
+        restore_directory_for_meta_if_needed "$path"
+    fi
+done
+
+unset IFS
+
+#read -rsp $'Press any key to continue...\n' -n1 key
