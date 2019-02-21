@@ -21,3 +21,4 @@ git unity-clean --dry-run
 ```
 
 Note that changes should not be staged because the script skips staged chages.
+Don't forget that the script should have execution permission on macOS and Linux (the permission is already in git just to note).
