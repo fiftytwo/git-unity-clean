@@ -19,3 +19,5 @@ To see what the script is going to do without making changes call it with ```--d
 ```
 git unity-clean --dry-run
 ```
+
+Note that changes should not be staged because the script skips staged chages.
