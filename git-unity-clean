@@ -16,6 +16,7 @@ is_dry()
 remove_file()
 {
     echo "Remove file '$1'"
+    remove_directory_for_meta_if_needed "$1"
     is_dry && return;
     rm -f "$1"
 }
@@ -43,6 +44,19 @@ restore_directory_for_meta_if_needed()
         echo "Restore directory for existing meta '$__asset'"
         is_dry && return;
         mkdir "$__asset"
+    fi
+}
+
+remove_directory_for_meta_if_needed()
+{
+    local __meta="$1"
+    if [[ "$__meta" == *.meta && -f "$__meta" ]]; then
+        local __asset=${__meta%.*}
+        if [[ -d "$__asset" && -z "$__asset" ]]; then
+            echo "Remove directory for existing meta '$__asset'"
+            is_dry && return;
+            rm -rf "$__asset"
+        fi
     fi
 }
 
