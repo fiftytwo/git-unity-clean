@@ -52,7 +52,7 @@ remove_directory_for_meta_if_needed()
     local __meta="$1"
     if [[ "$__meta" == *.meta && -f "$__meta" ]]; then
         local __asset=${__meta%.*}
-        if [[ -d "$__asset" && -z "$__asset" ]]; then
+        if [[ -d "$__asset" ]]; then
             echo "Remove directory for existing meta '$__asset'"
             is_dry && return;
             rm -rf "$__asset"
