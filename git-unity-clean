@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if ! git --version > /dev/null 2>&1 ; then
     echo "Error: git is not found"
@@ -75,12 +75,12 @@ get_path_from_status_line()
     local __status_line=$1
 
     if [[ ${__status_line:3:1} == \" ]]; then
-        __status_line=${__status_line:4:-1}
+        __status_line=${__status_line:4:${#__status_line}-5}
     else
         __status_line=${__status_line:3}
     fi
 
-    if [[ ${__status_line: -1} == / ]]; then
+    if [[ ${__status_line:${#__status_line}-1:1} == / ]]; then
         __status_line=${__status_line%?}
     fi
 
